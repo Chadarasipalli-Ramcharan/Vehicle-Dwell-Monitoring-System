@@ -1,4 +1,3 @@
-# 🚗 Vehicle-Dwell-Monitoring-System
 
 <h1 align="center">🚗 Vehicle Dwell Monitoring System</h1>
 
@@ -12,31 +11,26 @@
 
 ## 📌 Project Overview
 
-The **Vehicle Dwell Monitoring System** is an AI-powered computer vision application designed to monitor vehicle activity at fuel stations using video footage.
+>The **Vehicle Dwell Monitoring System** is an AI-powered computer vision application designed to monitor vehicle activity at fuel stations using video footage.
 
-The system detects vehicles, tracks their movement, monitors four predefined fueling zones, and calculates how long vehicles remain within each zone. By combining YOLO11 object detection, BoT-SORT tracking, and a vehicle identity management system, the application transforms video footage into meaningful operational insights.
+>The system detects vehicles, tracks their movement, monitors four predefined fueling zones, and calculates how long vehicles remain within each zone. By combining YOLO11 object detection, BoT-SORT tracking, and a vehicle identity management system, the application transforms video footage into meaningful operational insights.
 
-It processes recorded videos, generates annotated output videos with an integrated analytics dashboard, and exports vehicle visit records and daily statistics for further analysis.
+>It processes recorded videos, generates annotated output videos with an integrated analytics dashboard, and exports vehicle visit records and daily statistics for further analysis.
 
-The system aims to support fuel station monitoring by providing insights into vehicle occupancy, fueling zone utilization, visit duration, and vehicle activity.
-
----
 
 ## ✨ Key Features
 
-- 🚘 **Vehicle Detection** — Detects cars, motorcycles, buses, and trucks using YOLO11.
-- 🎯 **Multi-Object Tracking** — Tracks multiple vehicles across video frames using BoT-SORT.
-- 🆔 **Vehicle ID Management** — Assigns vehicle identities and helps maintain IDs during temporary tracking interruptions.
-- ⛽ **Four-Zone Monitoring** — Monitors vehicle occupancy across four configurable fueling zones.
-- ⏱️ **Dwell-Time Analysis** — Measures how long vehicles stay within each fueling zone.
-- 📊 **Live Analytics Dashboard** — Displays vehicle counts, zone occupancy, visit statistics, and timers.
-- 🎥 **Annotated Video Output** — Generates processed videos with vehicle bounding boxes, tracking IDs, zone markers, and dashboard overlays.
-- 📁 **Automatic Data Export** — Saves vehicle visit records in CSV and daily statistics in JSON format.
-- ⚙️ **Interactive Zone Configuration** — Configure fueling zone positions directly on the video frame.
-- 🔄 **Occlusion Handling** — Uses confirmation and grace-period logic to reduce tracking interruptions.
-- 📈 **Operational Insights** — Helps analyze vehicle visits, fueling zone utilization, and dwell-time patterns.
-
----
+- Detects cars, motorcycles, buses and trucks (YOLO11)
+- Unique vehicle IDs (V1, V2, ...) with a custom ID manager that re-links IDs lost to occlusion or tracker flicker
+- 4 configurable fueling zones, set by clicking dots on the first video frame
+- Dwell-time measurement per visit, with confirmation and exit grace periods to avoid false counts
+- Live dashboard panel on the right side of the output video:
+  - Unique vehicles, total visits, zones busy
+  - Per-zone status: **FREE / DETECTING / OCCUPIED** with live timer
+  - Visits, average time and last visit per zone
+  - Recent visits list and video progress bar
+- Outputs: annotated video, `dwell_log.csv`, `stats_YYYY-MM-DD.json`
+- Interactive controls: pause, resize window, edit zones, adjust detection threshold
 
 ## 🛠️ Tech Stack
 
@@ -53,334 +47,115 @@ The system aims to support fuel station monitoring by providing insights into ve
 
 ---
 
-## 🧠 System Architecture
 
-```mermaid
-flowchart TD
-    A[Input Video] --> B[Video Frame Processing]
-    B --> C[YOLO11 Vehicle Detection]
-    C --> D[BoT-SORT Multi-Object Tracking]
-    D --> E[Vehicle ID Management]
-    E --> F[Fueling Zone Association]
-    F --> G[Dwell-Time Calculation]
-    G --> H[Zone Occupancy Monitoring]
-    H --> I[Analytics Dashboard]
-    H --> J[CSV Visit Logs]
-    H --> K[Daily JSON Statistics]
-    I --> L[Annotated Output Video]
-```
+## 🧠 How it works
 
----
+1. **Detection + tracking**: YOLO11 with BoT-SORT gives boxes and raw track IDs for vehicle classes.
+2. **ID manager**: maps raw tracker IDs to stable vehicle IDs using IoU matching and speed, so parked vehicles keep their ID through short occlusions.
+3. **Zone assignment**: a vehicle belongs to a zone when the zone's dot falls inside the (slightly shrunk) vehicle box.
+4. **Visit tracker**: a vehicle must stay in a zone for `ENTER_CONFIRM_SEC` to count as a visit. A visit ends after a grace period once the vehicle leaves or is lost.
+5. **Dashboard + logging**: all timing uses **video time**, so dwell times stay correct even if processing is slower or faster than real time.
 
-## ⚙️ How the System Works
-
-### 1. Video Input and Processing
-
-The system loads recorded fuel station video footage and processes it frame by frame using OpenCV.
-
-### 2. Vehicle Detection
-
-YOLO11 detects vehicles appearing in each video frame and identifies their vehicle categories.
-
-Supported classes include:
-
-- Cars
-- Motorcycles
-- Buses
-- Trucks
-
-### 3. Multi-Object Tracking
-
-BoT-SORT associates detected vehicles across consecutive frames and assigns tracking IDs.
-
-This allows the system to follow vehicle movement instead of treating every frame as an independent detection.
-
-### 4. Vehicle Identity Management
-
-A custom ID management layer maps raw tracker IDs to system-level vehicle IDs.
-
-IoU-based matching and movement information are used to help maintain identities during temporary detection loss, occlusion, or tracking ID changes.
-
-### 5. Fueling Zone Association
-
-Four fueling zones can be configured on the video frame.
-
-The system uses zone positions and vehicle bounding boxes to determine whether a vehicle is associated with a particular fueling area.
-
-### 6. Visit Detection
-
-Vehicle visits are monitored using confirmation and grace-period logic.
-
-- Entry confirmation helps reduce false visits caused by brief detections.
-- Exit grace periods help prevent visits from ending immediately during temporary tracking interruptions.
-- Tracking-loss handling helps preserve visit continuity during short occlusions.
-
-### 7. Dwell-Time Calculation
-
-The system measures how long a vehicle remains associated with a fueling zone.
-
-Timing is based on video time rather than processing speed, helping maintain consistent dwell-time measurements when processing speed varies.
-
-### 8. Dashboard and Data Logging
-
-Vehicle activity is displayed through an analytics panel.
-
-The system also exports visit records and daily statistics for further inspection and analysis.
-
----
-
-## 🚀 Installation & Setup
-
-### Prerequisites
-
-- Python 3.9 or later
-- Git
-- A system capable of running YOLO inference
-- Input video footage
-
-### Step 1: Clone the Repository
+## 📦 Installation
 
 ```bash
-git clone https://github.com/Chadarasipalli-Ramcharan/Vehicle-Dwell-Monitoring-System.git
-```
-
-### Step 2: Navigate to the Project Directory
-
-```bash
-cd Vehicle-Dwell-Monitoring-System
-```
-
-### Step 3: Install Dependencies
-
-```bash
+git clone https://github.com/<your-username>/petrol-pump-vehicle-dwell-analytics.git
+cd petrol-pump-vehicle-dwell-analytics
 pip install -r requirements.txt
 ```
 
-### Step 4: Prepare the Input Video
-
-Place your input video in the project directory.
-
-Example:
-
-```text
-petrol-pump.mp4
+`requirements.txt`:
 ```
-
-The YOLO11 model weights (`yolo11n.pt`) can be downloaded automatically by Ultralytics when required.
-
----
-
-## 📦 Dependencies
-
-The project uses the following Python libraries:
-
-```text
 ultralytics
 opencv-python
 numpy
 ```
 
-Install all dependencies using:
-
-```bash
-pip install ultralytics opencv-python numpy
-```
-
----
+The YOLO11 weights (`yolo11n.pt`) download automatically on first run.
 
 ## ▶️ Usage
 
-### Step 1: Configure Fueling Zones
-
-Run the application in setup mode to configure the four fueling zones.
-
 ```bash
-python app.py --video petrol-pump.mp4 --setup
+# First run: place 4 dots (one per fueling zone) on the first frame
+python app_video_4zones.py --video path/to/video.mp4 --setup
+
+# Next runs: reuses saved zones.json
+python app_video_4zones.py --video path/to/video.mp4
+
+# Faster processing (every 2nd frame), no window
+python app_video_4zones.py --video path/to/video.mp4 --stride 2 --no-show
+
+# Set the real start time of the video for correct timestamps in the log
+python app_video_4zones.py --video path/to/video.mp4 --start "2025-01-01 10:00:00"
 ```
-
-Place the zone markers at the required fueling positions on the video frame and save the configuration.
-
-### Step 2: Start Vehicle Monitoring
-
-Run the application:
-
-```bash
-python app.py --video petrol-pump.mp4
-```
-
-The system will:
-
-- Process the input video.
-- Detect vehicles.
-- Track vehicles across frames.
-- Monitor fueling zones.
-- Calculate vehicle dwell times.
-- Display the analytics dashboard.
-- Generate annotated output video.
-- Export visit logs and statistics.
-
-### Faster Video Processing
-
-```bash
-python app.py --video petrol-pump.mp4 --stride 2
-```
-
-### Process Without a Display Window
-
-```bash
-python app.py --video petrol-pump.mp4 --stride 2 --no-show
-```
-
 ---
 
-## 📊 Dashboard Analytics
+### Command line options
 
-The monitoring dashboard provides a visual overview of vehicle activity and fueling zone utilization.
-
-### Global Statistics
-
-- Total unique vehicles tracked
-- Total vehicle visits
-- Number of occupied fueling zones
-- Current vehicle activity
-
-### Zone-Level Statistics
-
-- Fueling zone status
-- Current dwell timer
-- Total recorded visits
-- Average dwell duration
-- Last recorded visit
-- Zone occupancy information
-
-### Zone Status Indicators
-
-| Status | Description |
+| Option | Description |
 |---|---|
-| 🟢 FREE | No vehicle currently occupying the zone |
-| 🟡 DETECTING | A vehicle is detected, but occupancy confirmation is pending |
-| 🔴 OCCUPIED | A vehicle visit has been confirmed |
+| `--video` | Input video path |
+| `--out` | Output video path (default: `<video>_output.mp4`) |
+| `--model` | YOLO weights (default `yolo11n.pt`, use `yolo11s.pt` for more accuracy) |
+| `--conf` | Detection confidence threshold (default 0.55) |
+| `--imgsz` | Inference image size (default 960) |
+| `--stride` | Process every N-th frame |
+| `--start` | Real start time of the video |
+| `--scale` | Window scale |
+| `--setup` / `--edit` / `--reset` | Redraw zones / edit zones / clear all data |
+| `--no-show` | Run without a display window |
 
 ---
 
-## 📁 Output Files
-
-The system automatically generates output files during video processing.
-
-| File | Description |
-|---|---|
-| `*_output.mp4` | Annotated video with vehicle tracking and dashboard |
-| `dwell_log.csv` | Detailed vehicle visit records |
-| `stats_YYYY-MM-DD.json` | Daily vehicle and zone analytics |
-| `zones.json` | Saved fueling zone positions |
-
-### CSV Visit Records
-
-The visit log contains information such as:
-
-- Date
-- Vehicle ID
-- Vehicle type
-- Fueling zone
-- Entry time
-- Exit time
-- Visit duration
-
-### JSON Analytics
-
-Daily JSON reports contain aggregated information about vehicle activity, visit counts, dwell-time statistics, and zone-level analytics.
-
----
-
-## 🎮 Keyboard Controls
+### Keyboard controls
 
 | Key | Action |
 |---|---|
-| `Q` | Quit the application |
-| `P` | Pause or resume processing |
-| `E` | Edit fueling zone positions |
-| `R` | Redraw fueling zones |
-| `X` | Clear monitoring data |
-| `[` | Decrease detection confidence threshold |
-| `]` | Increase detection confidence threshold |
-| `+` / `-` | Resize the application window |
-| `W` | Adjust window size |
-| `F` | Adjust window size |
-| `1` | Adjust window size |
+| `q` | Quit (output video is saved) |
+| `p` | Pause / resume |
+| `e` | Edit zone dots |
+| `r` | Redraw zones |
+| `x` | Clear all data |
+| `[` / `]` | Lower / raise detection threshold |
+| `+` `-` `w` `f` `1` | Window size |
+
+---
+
+## 📁 Output files
+
+| File | Content |
+|---|---|
+| `<video>_output.mp4` | Annotated video with dashboard |
+| `dwell_log.csv` | One row per visit: date, vehicle ID, type, zone, start, end, duration |
+| `stats_YYYY-MM-DD.json` | Daily counts, total dwell and unique vehicle IDs per zone |
+| `zones.json` | Saved zone positions |
 
 ---
 
 ## ⚙️ Configuration
 
-The system includes configurable parameters that help control vehicle detection, zone monitoring, and tracking behavior.
-
-| Parameter | Description |
+| Constant | Meaning |
 |---|---|
-| `ENTER_CONFIRM_SEC` | Minimum time a vehicle must remain in a zone before a visit is confirmed |
-| `EXIT_GRACE_SEC` | Grace period before a visit is ended after the vehicle leaves |
-| `LOST_KEEP_SEC` | Time to retain vehicle association during temporary detection loss |
-| `STATIONARY_SPEED` | Speed threshold used for stationary vehicle handling |
-| `BOX_SHRINK` | Bounding box adjustment used during zone association |
-| `BIG_VEHICLE_ZONE` | Optional priority zone for larger vehicles; `0` disables it |
-
-These parameters can be tuned according to camera positioning, scene conditions, vehicle density, and monitoring requirements.
-
----
-
-## 🌍 Real-World Applications
-
-The Vehicle Dwell Monitoring System can be used in several operational monitoring scenarios.
-
-- ⛽ Fuel station occupancy monitoring
-- 🚗 Vehicle dwell-time analysis
-- 📊 Fueling zone utilization analysis
-- 🚦 Vehicle flow monitoring
-- 🏭 Service station operational analysis
-- 📈 Identifying high-occupancy periods
-- 🕒 Service duration analysis
-- 📋 Historical vehicle visit reporting
+| `ENTER_CONFIRM_SEC` | Time in a zone before a visit counts |
+| `EXIT_GRACE_SEC` | Grace time before a moving vehicle's visit ends |
+| `LOST_KEEP_SEC` | How long a parked, undetected (occluded) vehicle keeps its zone |
+| `STATIONARY_SPEED` | Speed below which a vehicle is treated as parked |
+| `BOX_SHRINK` | Shrinks the box before checking if the zone dot is inside |
+| `BIG_VEHICLE_ZONE` | Optional zone number (1-4) that gets priority for big vehicles; 0 = off |
 
 ---
 
 ## ⚠️ Limitations
 
-- Detection accuracy depends on video quality, lighting conditions, and camera angle.
-- Vehicles may be temporarily lost due to occlusion or overlapping objects.
-- Tracking performance may decrease in crowded scenes.
-- Fueling zone association depends on accurate zone placement.
-- Dwell-time accuracy depends on reliable detection and tracking continuity.
-- Different camera views may require zone reconfiguration and parameter tuning.
-- The current implementation processes recorded videos and does not inherently support live CCTV or RTSP streams.
+- Accuracy depends on camera angle, lighting and occlusion
+- Zones are dot-based, so camera placement should keep vehicles' boxes covering the dot while fueling
+- Tuned for a specific camera view; parameters may need adjusting for other scenes
 
 ---
 
-## 🔮 Future Enhancements
+## 🚀 Future work
 
-Potential improvements for future development include:
-
-- 📡 Live CCTV and RTSP camera integration
-- 🗺️ Polygon-based fueling zone monitoring
-- 🌐 Web-based analytics dashboard
-- 🗄️ Database integration for historical records
-- 📈 Peak-hour vehicle activity analysis
-- 🚘 Vehicle flow visualization
-- 📑 Automated analytics reports
-- 📷 Multi-camera monitoring
-- 📊 Advanced occupancy and utilization analytics
-- 🔔 Automated alerts for unusual occupancy durations
-
----
-
-## 📄 License
-
-This project is intended for educational and research purposes.
-
-Please respect the original project's license, retain required third-party notices, and provide appropriate acknowledgement when using or modifying existing implementations.
-
----
-
-<h3 align="center">Vehicle-Dwell-Monitoring-System</h3>
-
-<p align="center">
-  Built with Computer Vision, Artificial Intelligence & Video Analytics
-</p>
+- Polygon zones and zone-owner lock for heavy occlusion
+- Live RTSP camera support
+- Web dashboard / database export
+- Vehicle-type based analytics and peak-hour reports
